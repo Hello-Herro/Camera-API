@@ -5,16 +5,60 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Camera;
 use Illuminate\Http\Request;
+use App\Http\Resources\CameraResource;
 
 class CameraController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(
-            Camera::all()
+        // Memanggil data dan menampilkan data berupa JSON pada Postman
+        // return response()->json(
+        //     Camera::all()
+        // );
+
+        // Memanggil data dan menampilkan data berupa JSON pada Postman menggunakan API Resource
+        // return CameraResource::collection(
+        //     Camera::all()
+        // );
+
+        // Memanggil data dan menampilkan data berupa JSON pada Postman menggunakan API Resource dan Pagination agar data yang terpanggil tidak langsung semua
+        // Standar API Modern
+        // $cameras = Camera::paginate(5);
+
+        // return CameraResource::collection($cameras);
+
+        //Memanggil data pada GET Postman lebih spesifik menggunakan Search nama atau brand
+        // $query = Camera::query();
+
+        // if ($request->search) {
+        //     $query->where('name', 'like', '%' . $request->search . '%')
+        //         ->orWhere('brand', 'like', '%' . $request->search . '%');
+        // }
+        // // menambahkan Sorting terhadap pricce (Opsional)
+        // if ($request->sort) {
+        //     $query->orderBy($request->sort);
+        // }
+
+        // $cameras = $query->paginate(5);
+
+        // return CameraResource::collection($cameras);
+
+        $query = Camera::query();
+
+        if ($request->filled('search')) {
+
+            $query->where(function ($q) use ($request) {
+
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('brand', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        return CameraResource::collection(
+            $query->paginate(5)
         );
     }
 
@@ -44,15 +88,18 @@ class CameraController extends Controller
      */
     public function show(string $id)
     {
-        $camera = Camera::find($id);
+        // $camera = Camera::find($id);
 
-        if (!$camera) {
-            return response()->json([
-                'message' => 'Camera tidak ditemukan'
-            ], 404);
-        }
+        // if (!$camera) {
+        //     return response()->json([
+        //         'message' => 'Camera tidak ditemukan'
+        //     ], 404);
+        // }
 
-        return response()->json($camera);
+        // return response()->json($camera);
+        $camera = Camera::findOrFail($id);
+
+        return new CameraResource($camera);
     }
 
     /**
